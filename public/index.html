@@ -1,31 +1,39 @@
 <!DOCTYPE html>
 <html>
-    <head>
+<head>
     <title>Exercise Tracker</title>
     <link href="style.css" rel="stylesheet" type="text/css" />
-    </head>
+</head>
 
-    <body>
+<body>
     <div class="container">
-        <h1>Exercise tracker</h1>
-        <form action="/api/users" method="post">
+    <h1>Exercise tracker</h1>
+    <form action="/api/users" method="post">
         <h2>Create a New User</h2>
         <p><code>POST /api/users</code></p>
         <input id="uname" type="text" name="username" placeholder="username" />
         <input type="submit" value="Submit" />
-        </form>
-
-
-        <form action="/api/users/:_id/exercises" id="exercise-form" method="post">
-            <h2>Add exercises</h2>
-            <p><code>POST /api/users/:_id/exercises</code></p>
-            <input id="uid" type="text" name="_id" placeholder="_id" />
-            <input id="desc" type="text" name="description" placeholder="description*" />
-            <input id="dur" type="text" name="duration" placeholder="duration* (mins.)" />
-            <input id="date" type="text" name="date" placeholder="date (yyyy-mm-dd)" />
-            <input type="submit" value="Submit" />
-        </form>
-        
+    </form>
+    <form action="/api/users/:_id/exercises" id="exercise-form" method="post">
+        <h2>Add exercises</h2>
+        <p><code>POST /api/users/:_id/exercises</code></p>
+        <input id="uid" type="text" name="_id" placeholder="_id"/>
+        <input id="desc" type="text" name="description" placeholder="description*" />
+        <input id="dur" type="text" name="duration" placeholder="duration* (mins.)" />
+        <input id="date" type="text" name="date" placeholder="date (yyyy-mm-dd)" />
+        <input type="submit" value="Submit" />
+    </form>
     </div>
-    </body>
+    <script>
+    const exerciseForm = document.getElementById("exercise-form");
+
+    exerciseForm.addEventListener("submit", () => {
+        const userId = document.getElementById("uid").value;
+        exerciseForm.action = `/api/users/${userId}/exercises`;
+
+        exerciseForm.submit();
+    });
+    </script>
+</body>
 </html>
+

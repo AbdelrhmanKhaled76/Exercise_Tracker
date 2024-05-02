@@ -41,7 +41,6 @@ app.post('/api/users/:_id/exercises',(req,res)=>{
     let exerciseDate = new Date();
     if (date) {
         exerciseDate = new Date(date);
-
         // Check if the provided date is valid
         if (isNaN(exerciseDate.getTime())) {
             return res.status(500).send("Invalid date");
@@ -57,14 +56,15 @@ app.post('/api/users/:_id/exercises',(req,res)=>{
         logs[logsIdx]["log"].push(...arr);
         logs[logsIdx]["count"]=logs[logsIdx]["log"].length;
 
-        res.json({
-            _id : log["_id"]
-            , username : log["username"]
-            , description : log["log"][0]["description"]
-            , duration: log["log"][0]["duration"]
-            , date : log["log"][0]["date"]
-        });
-});
+        const queryParams = {
+            _id : log["_id"],
+            username : log["username"],
+            description : log["log"][0]["description"],
+            duration: log["log"][0]["duration"],
+            date : log["log"][0]["date"]
+        };
+        res.json(queryParams);
+    });
 
 app.get('/api/users/:_id/logs',(req,res)=>{
     const {_id} = req.params;
@@ -72,11 +72,9 @@ app.get('/api/users/:_id/logs',(req,res)=>{
 
     const qlog = logs.filter(loger => loger["_id"] === _id);
 
-    console.log(qlog)
     if(qlog){
         let filteredLogs = qlog[0]["log"];
 
-        console.log(filteredLogs);
         if (from && to) {
             filteredLogs = filteredLogs.filter(log => {
                 const logDate = new Date(log["date"]);
