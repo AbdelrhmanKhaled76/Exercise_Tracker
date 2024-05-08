@@ -2,6 +2,7 @@ const express = require('express');
 const {ObjectId} = require('mongodb');
 const app = express()
 
+
 const logs = [];
 
 app.use(express.static('./public'));
@@ -37,40 +38,35 @@ app.get('/api/users',(req,res)=>{
 });
 
 app.post('/api/users/:_id/exercises',(req,res)=>{
-    const {_id,description,duration} = req.body;
-    let {date} = req.body;
-    const filteredUser = logs.filter(el=>{
-        return el["_id"] === _id.toString();
-    });
+const { _id } = req.params;
+const { description, duration } = req.body;
+let { date } = req.body;
+const user = logs.find(user => user._id === _id);
     if(!description || isNaN(duration) || !duration){
-        return res.status(500).send("Invalid ID or missing description/duration");
+        return res.status(404).send("Invalid ID or missing description/duration");
     }
-    if(!Boolean(filteredUser[0])){
-        return res.status(500).send("Invalid ID or missing description/duration");
+    if (!user) {
+        return res.status(404).send("Error: User not found");
     }
-    let exerciseDate = new Date();
-    if (date) {
-        exerciseDate = new Date(date);
-        // Check if the provided date is valid
-        if (isNaN(exerciseDate.getTime())) {
-            return res.status(500).send("Invalid date");
-        }
+    if (!date) {
+        date = new Date().toDateString();
+    } else {
+        date = new Date(date).toDateString();
     }
-        exerciseDate = exerciseDate.toDateString();
 
         const filteredLogsIdx = logs.findIndex(el=>{
             return el["_id"] === _id.toString();
         });
         
-        logs[filteredLogsIdx]["log"].push({"date" : exerciseDate, "duration" : Number(duration), "description" : description});
-        logs[filteredLogsIdx]["count"] = logs[filteredLogsIdx]["log"].length;
+        user.log.push({ description, duration: parseInt(duration), date });
+        user.count++;
 
         res.json({
-            _id : logs[filteredLogsIdx]["_id"],
-            username : logs[filteredLogsIdx]["username"],
-            date : exerciseDate,
-            duration: Number(duration),
-            description : description
+        _id: user._id,
+        username: user.username,
+        date,
+        duration: parseInt(duration),
+        description
         });
     });
 
