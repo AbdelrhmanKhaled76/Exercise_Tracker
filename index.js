@@ -3,8 +3,6 @@ const {ObjectId} = require('mongodb');
 const app = express()
 
 const logs = [];
-const log = {};
-const getUsers = [];
 
 app.use(express.static('./public'));
 app.use(express.urlencoded({extended:false}));
@@ -16,26 +14,35 @@ app.get('/', (req, res) => {
 
 app.post('/api/users',(req,res)=>{
     const {username} = req.body;
-    log["username"] = username;
-    log["count"] = 0;
-    log["log"] = [];
-    log["_id"] = (new ObjectId()).toString();
-    getUsers.push({"username" : log["username"], "_id" : log["_id"], "__v" : 0});
-    logs.push({"username" : log["username"], "_id" : log["_id"],log : []});
-    res.json({
-        "username" : log["username"]
-        , "_id" : log["_id"]
+    logs.push({"username" : username, "_id" : (new ObjectId()).toString() ,"count": 0 ,"log" : []});    
+    const getUsers = logs.map(el=>{
+        return {"_id" : el["_id"], "username" : el["username"]};
     });
+    const thisUser = getUsers.filter(el=>{
+        return el["username"] === username;
+    });
+    res.json(
+        thisUser[0]
+    );
 });
 
 app.get('/api/users',(req,res)=>{
+    const getUsers = logs.map(el=>{
+        return {"_id" : el["_id"], "username" : el["username"]};
+    });
     res.json(getUsers);
 });
 
 app.post('/api/users/:_id/exercises',(req,res)=>{
     const {_id,description,duration} = req.body;
-    var {date} = req.body;
-    if(!(log["_id"] === _id.toString()) || !description || isNaN(duration)){
+    let {date} = req.body;
+    const filteredUser = logs.filter(el=>{
+        return el["_id"] === _id.toString();
+    });
+    if(!description || isNaN(duration) || !duration){
+        return res.status(500).send("Invalid ID or missing description/duration");
+    }
+    if(!Boolean(filteredUser[0])){
         return res.status(500).send("Invalid ID or missing description/duration");
     }
     let exerciseDate = new Date();
@@ -48,29 +55,28 @@ app.post('/api/users/:_id/exercises',(req,res)=>{
     }
         exerciseDate = exerciseDate.toDateString();
 
-        log["log"].push({description : description, duration : Number(duration), date : exerciseDate});
-        log["count"] = log["log"].length
+        const filteredLogsIdx = logs.findIndex(el=>{
+            return el["_id"] === _id.toString();
+        });
+        console.log(filteredLogsIdx);
+        
+        logs[filteredLogsIdx]["log"].push({"date" : exerciseDate, "duration" : duration, "description" : description});
+        logs[filteredLogsIdx]["count"] = logs[filteredLogsIdx]["log"].length;
 
-        const logsIdx = logs.findIndex(log => log._id === _id);
-        const arr = [{description : description, duration : Number(duration), date : exerciseDate}];
-        logs[logsIdx]["log"].push(...arr);
-        logs[logsIdx]["count"]=logs[logsIdx]["log"].length;
-
-        const queryParams = {
-            _id : log["_id"],
-            username : log["username"],
-            description : log["log"][0]["description"],
-            duration: log["log"][0]["duration"],
-            date : log["log"][0]["date"]
-        };
-        res.json(queryParams);
+        res.json({
+            _id : logs[filteredLogsIdx]["_id"],
+            username : logs[filteredLogsIdx]["username"],
+            date : exerciseDate,
+            duration: duration,
+            description : description
+        });
     });
 
 app.get('/api/users/:_id/logs',(req,res)=>{
     const {_id} = req.params;
     const {limit,from,to} = req.query;
 
-    const qlog = logs.filter(loger => loger["_id"] === _id);
+    const qlog = logs.filter(loger => loger["_id"] === _id.toString());
 
     if(qlog){
         let filteredLogs = qlog[0]["log"];
