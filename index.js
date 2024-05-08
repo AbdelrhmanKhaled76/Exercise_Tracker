@@ -14,9 +14,12 @@ app.get('/', (req, res) => {
 
 app.post('/api/users',(req,res)=>{
     const {username} = req.body;
+    if(!username){
+        res.status(400).send("Error : Username not found");
+    }
     logs.push({"username" : username, "_id" : (new ObjectId()).toString() ,"count": 0 ,"log" : []});    
     const getUsers = logs.map(el=>{
-        return {"_id" : el["_id"], "username" : el["username"]};
+        return { "username" : el["username"], "_id" : el["_id"]};
     });
     const thisUser = getUsers.filter(el=>{
         return el["username"] === username;
@@ -58,16 +61,15 @@ app.post('/api/users/:_id/exercises',(req,res)=>{
         const filteredLogsIdx = logs.findIndex(el=>{
             return el["_id"] === _id.toString();
         });
-        console.log(filteredLogsIdx);
         
-        logs[filteredLogsIdx]["log"].push({"date" : exerciseDate, "duration" : duration, "description" : description});
+        logs[filteredLogsIdx]["log"].push({"date" : exerciseDate, "duration" : Number(duration), "description" : description});
         logs[filteredLogsIdx]["count"] = logs[filteredLogsIdx]["log"].length;
 
         res.json({
             _id : logs[filteredLogsIdx]["_id"],
             username : logs[filteredLogsIdx]["username"],
             date : exerciseDate,
-            duration: duration,
+            duration: Number(duration),
             description : description
         });
     });
